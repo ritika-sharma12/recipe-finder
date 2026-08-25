@@ -1,0 +1,10 @@
+.git
+.idea
+.nuxt
+.output
+node_modules
+target
+frontend/node_modules
+frontend/.nuxt
+frontend/.output
+*.log
