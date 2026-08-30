@@ -410,6 +410,3 @@ MIT License - See LICENSE file for details
 
 For issues, questions, or suggestions, please open an issue on GitHub.
 
----
-
-**Happy Cooking! 👨‍🍳**
