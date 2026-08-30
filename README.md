@@ -363,6 +363,12 @@ All dependencies are managed in `pom.xml`. Key dependencies:
 
 ### Deploy to Fly.io
 
+The recommended Fly.io deployment uses one application image for the
+frontend and backend, with PostgreSQL hosted separately for persistence. The
+repository includes `Dockerfile.fly` and `fly.single.toml` for this setup.
+Replace the example app name if it is already in use, and choose a nearby
+Fly.io region if needed.
+
 ```bash
 # Install flyctl
 curl -L https://fly.io/install.sh | sh
@@ -370,17 +376,33 @@ curl -L https://fly.io/install.sh | sh
 # Login
 flyctl auth login
 
-# Deploy
-flyctl launch  # Answer prompts
-flyctl deploy
+# Create the combined frontend/backend app
+flyctl launch --config fly.single.toml --no-deploy
+
+# Configure the hosted PostgreSQL connection
+flyctl secrets set \
+  SPRING_DATASOURCE_URL="jdbc:postgresql://HOST:5432/recipe_finder_db?sslmode=require" \
+  SPRING_DATASOURCE_USERNAME="postgres" \
+  SPRING_DATASOURCE_PASSWORD="your-password"
+flyctl deploy --config fly.single.toml
 ```
+
+The frontend and backend run in the same Fly Machine. The frontend's Nuxt
+server calls the backend through `http://127.0.0.1:8181/api`, while Fly
+exposes only the frontend on port `3000`.
+
+Create or provision PostgreSQL separately using Fly Managed Postgres or
+another hosted PostgreSQL provider. If using a Fly PostgreSQL app, use its
+private hostname as `HOST` and ensure it is in the same Fly organization.
+The local Docker Compose database is not deployed by this configuration.
 
 ### Environment Variables
 
 Create `.env` file or set in deployment platform:
 ```
-DATABASE_URL=postgresql://user:password@host:5432/recipe_finder_db
-JAVA_VERSION=17
+SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:5432/recipe_finder_db
+SPRING_DATASOURCE_USERNAME=postgres
+SPRING_DATASOURCE_PASSWORD=your-password
 ```
 
 ## 📝 Future Enhancements
@@ -409,4 +431,3 @@ MIT License - See LICENSE file for details
 ## 📧 Support
 
 For issues, questions, or suggestions, please open an issue on GitHub.
-
