@@ -30,23 +30,23 @@ public class RecipeService {
      */
     public PageResponse<RecipeDTO> searchRecipesByIngredients(RecipeSearchRequest searchRequest, Pageable pageable) {
         List<Recipe> allRecipes = recipeRepository.findAllWithIngredients();
-        
+
         Set<String> availableBaseIngredients = searchRequest.getAvailableBaseIngredients() != null
-            ? searchRequest.getAvailableBaseIngredients().stream()
+                ? searchRequest.getAvailableBaseIngredients().stream()
                 .map(this::normalizeIngredientForMatch)
                 .filter(ingredient -> !isBasicPantryIngredient(ingredient))
                 .collect(Collectors.toSet())
-            : new HashSet<>();
+                : new HashSet<>();
 
         List<RecipeDTO> recipes = allRecipes.stream()
-            .filter(recipe -> availableBaseIngredients.isEmpty()
-                || matchesIngredients(recipe, availableBaseIngredients,
-                    Boolean.TRUE.equals(searchRequest.getExactIngredientsMatch())))
-            .filter(recipe -> matchesCookTime(recipe, searchRequest.getMaxCookTime()))
-            .map(this::convertToDTO)
-            .sorted(Comparator.comparing(RecipeDTO::getCookTimeMinutes, Comparator.nullsLast(Comparator.naturalOrder())))
-            .collect(Collectors.toList());
-            return toPageResponse(recipes, pageable);
+                .filter(recipe -> availableBaseIngredients.isEmpty()
+                        || matchesIngredients(recipe, availableBaseIngredients,
+                        Boolean.TRUE.equals(searchRequest.getExactIngredientsMatch())))
+                .filter(recipe -> matchesCookTime(recipe, searchRequest.getMaxCookTime()))
+                .map(this::convertToDTO)
+                .sorted(Comparator.comparing(RecipeDTO::getCookTimeMinutes, Comparator.nullsLast(Comparator.naturalOrder())))
+                .collect(Collectors.toList());
+        return toPageResponse(recipes, pageable);
     }
 
     /**
@@ -54,15 +54,12 @@ public class RecipeService {
      */
     private boolean matchesIngredients(Recipe recipe, Set<String> availableBaseIngredients, boolean exactMatch) {
         Set<String> recipeIngredients = recipe.getIngredients().stream()
-            .map(ri -> normalizeIngredientForMatch(ri.getIngredient().getBaseIngredient()))
-            .filter(ingredient -> !isBasicPantryIngredient(ingredient))
-            .collect(Collectors.toSet());
+                .map(ri -> normalizeIngredientForMatch(ri.getIngredient().getBaseIngredient()))
+                .filter(ingredient -> !isBasicPantryIngredient(ingredient))
+                .collect(Collectors.toSet());
 
         if (exactMatch) {
-            return availableBaseIngredients.stream()
-                    .allMatch(available -> recipeIngredients.stream()
-                            .anyMatch(recipeIngredient -> recipeIngredient.contains(available)
-                                    || available.contains(recipeIngredient)));
+            return recipeIngredients.equals(availableBaseIngredients);
         }
 
         return availableBaseIngredients.stream()
@@ -106,8 +103,8 @@ public class RecipeService {
      */
     public PageResponse<RecipeDTO> getAllRecipes(Pageable pageable) {
         List<RecipeDTO> recipes = recipeRepository.findAll().stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
         return toPageResponse(recipes, pageable);
     }
 
@@ -116,8 +113,8 @@ public class RecipeService {
      */
     public RecipeDTO getRecipeById(Long id) {
         return recipeRepository.findByIdWithIngredients(id)
-            .map(this::convertToDTO)
-            .orElseThrow(() -> new RecipeNotFoundException(id));
+                .map(this::convertToDTO)
+                .orElseThrow(() -> new RecipeNotFoundException(id));
     }
 
     /**
@@ -125,8 +122,8 @@ public class RecipeService {
      */
     public PageResponse<RecipeDTO> searchRecipesByTitle(String title, Pageable pageable) {
         List<RecipeDTO> recipes = recipeRepository.findByTitleContainingIgnoreCase(title).stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
         return toPageResponse(recipes, pageable);
     }
 
@@ -135,8 +132,8 @@ public class RecipeService {
      */
     public PageResponse<RecipeDTO> getRecipesByMaxCookTime(Integer maxTime, Pageable pageable) {
         List<RecipeDTO> recipes = recipeRepository.findByMaxCookTime(maxTime).stream()
-            .map(this::convertToDTO)
-            .collect(Collectors.toList());
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
         return toPageResponse(recipes, pageable);
     }
 
@@ -145,12 +142,12 @@ public class RecipeService {
         int toIndex = Math.min(fromIndex + pageable.getPageSize(), items.size());
         int totalPages = items.isEmpty() ? 0 : (int) Math.ceil((double) items.size() / pageable.getPageSize());
         return PageResponse.<T>builder()
-            .content(items.subList(fromIndex, toIndex))
-            .page(pageable.getPageNumber())
-            .size(pageable.getPageSize())
-            .totalElements(items.size())
-            .totalPages(totalPages)
-            .build();
+                .content(items.subList(fromIndex, toIndex))
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .totalElements(items.size())
+                .totalPages(totalPages)
+                .build();
     }
 
     /**
@@ -158,26 +155,26 @@ public class RecipeService {
      */
     private RecipeDTO convertToDTO(Recipe recipe) {
         List<RecipeDTO.IngredientDetail> ingredientDetails = recipe.getIngredients().stream()
-            .map(ri -> RecipeDTO.IngredientDetail.builder()
-                .id(ri.getIngredient().getId())
-                .name(ri.getIngredient().getName())
-                .baseIngredient(ri.getIngredient().getBaseIngredient())
-                .quantityWithUnit(ri.getQuantityWithUnit())
-                .build())
-            .collect(Collectors.toList());
+                .map(ri -> RecipeDTO.IngredientDetail.builder()
+                        .id(ri.getIngredient().getId())
+                        .name(ri.getIngredient().getName())
+                        .baseIngredient(ri.getIngredient().getBaseIngredient())
+                        .quantityWithUnit(ri.getQuantityWithUnit())
+                        .build())
+                .collect(Collectors.toList());
 
         return RecipeDTO.builder()
-            .id(recipe.getId())
-            .title(recipe.getTitle())
-            .cookTimeMinutes(recipe.getCookTimeMinutes())
-            .prepTimeMinutes(recipe.getPrepTimeMinutes())
-            .instructions(recipe.getInstructions())
-            .author(recipe.getAuthor())
-            .ratings(recipe.getRatings())
-            .imageUrl(recipe.getImageUrl())
-            .category(recipe.getCategory())
-            .cuisine(recipe.getCuisine())
-            .ingredients(ingredientDetails)
-            .build();
+                .id(recipe.getId())
+                .title(recipe.getTitle())
+                .cookTimeMinutes(recipe.getCookTimeMinutes())
+                .prepTimeMinutes(recipe.getPrepTimeMinutes())
+                .instructions(recipe.getInstructions())
+                .author(recipe.getAuthor())
+                .ratings(recipe.getRatings())
+                .imageUrl(recipe.getImageUrl())
+                .category(recipe.getCategory())
+                .cuisine(recipe.getCuisine())
+                .ingredients(ingredientDetails)
+                .build();
     }
 }
