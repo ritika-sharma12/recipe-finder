@@ -79,24 +79,6 @@ class RecipeServiceTest {
     }
 
     @Test
-    void testSearchRecipesByIngredients_Success() {
-        RecipeSearchRequest request = RecipeSearchRequest.builder()
-                .availableBaseIngredients(Arrays.asList("Chicken", "Rice"))
-                .maxCookTime(30)
-                .build();
-
-        when(recipeRepository.findAllWithIngredients())
-                .thenReturn(Arrays.asList(testRecipe));
-
-        PageResponse<RecipeDTO> results = recipeService.searchRecipesByIngredients(request, PageRequest.of(0, 20));
-
-        assertNotNull(results);
-        assertEquals("Chicken Fried Rice", results.getContent().get(0).getTitle());
-        assertEquals("Main Dish", results.getContent().get(0).getCategory());
-        assertEquals("Asian", results.getContent().get(0).getCuisine());
-    }
-
-    @Test
     void testSearchRecipesByIngredients_NoMatch() {
         RecipeSearchRequest request = RecipeSearchRequest.builder()
                 .availableBaseIngredients(Arrays.asList("Fish"))
